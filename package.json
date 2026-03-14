@@ -1,0 +1,13 @@
+{
+  "name": "bin-collection-nmd",
+  "version": "0.1.0",
+  "description": "Bin collection lookup for Newry, Mourne and Down District Council",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  }
+}

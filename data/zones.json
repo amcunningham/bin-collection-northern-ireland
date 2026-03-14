@@ -1,0 +1,15 @@
+{
+  "_description": "Maps postcodes to their collection day and zone. Add more by looking up postcodes on newrymournedown.org/weekly-bin-collection-and-calendar",
+  "_format": "postcode -> { day: MON|TUE|WED|THU|FRI, zone: string }",
+  "_postcodeAreas": ["BT23", "BT24", "BT25", "BT27", "BT30", "BT31", "BT32", "BT33", "BT34", "BT35", "BT60"],
+  "_zoneNaming": "Zone letters (Z, V) are geographic area identifiers shared across days. The ref is DAY + ZONE (e.g. MON Z1, TUES Z2, WED Z2 are different schedules). Both Z and V zones appear on multiple days.",
+  "postcodes": {
+    "BT34 4HS": { "day": "WED", "zone": "Z2", "ref": "WED Z2" },
+    "BT34 4HP": { "day": "THU", "zone": "V2", "ref": "THURS V2" },
+    "BT34 4RZ": { "day": "TUE", "zone": "Z2", "ref": "TUES Z2" },
+    "BT34 4RT": { "day": "WED", "zone": "Z2", "ref": "WED Z2" },
+    "BT30 6BP": { "day": "WED", "zone": "Z1", "ref": "WED Z1" },
+    "BT34 3BG": { "day": "FRI", "zone": "V2", "ref": "FRI V2" },
+    "BT34 3BP": { "day": "MON", "zone": "Z1", "ref": "MON Z1" }
+  }
+}

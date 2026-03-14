@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bin Night NI - Newry, Mourne &amp; Down</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      padding: 30px 0 20px;
+    }
+
+    header h1 {
+      font-size: 1.8em;
+      color: #2c3e50;
+    }
+
+    header p {
+      color: #7f8c8d;
+      margin-top: 5px;
+      font-size: 0.95em;
+    }
+
+    .search-box {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .search-box label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 0.95em;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .search-row input {
+      flex: 1;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1em;
+      text-transform: uppercase;
+      transition: border-color 0.2s;
+    }
+
+    .search-row input:focus {
+      outline: none;
+      border-color: #2196F3;
+    }
+
+    .search-row button {
+      padding: 12px 24px;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .search-row button:hover { background: #34495e; }
+    .search-row button:active { background: #1a252f; }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 0.85em;
+      color: #95a5a6;
+    }
+
+    #results { margin-top: 10px; }
+
+    .error {
+      background: #fff3f3;
+      border: 1px solid #ffcdd2;
+      border-radius: 12px;
+      padding: 15px 20px;
+      color: #c62828;
+      margin-bottom: 15px;
+    }
+
+    .collection-day {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .collection-day h2 {
+      font-size: 1.1em;
+      color: #7f8c8d;
+      margin-bottom: 5px;
+    }
+
+    .collection-day .day-name {
+      font-size: 1.6em;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .bin-card {
+      background: white;
+      border-radius: 12px;
+      padding: 15px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .bin-icon {
+      width: 50px;
+      height: 60px;
+      border-radius: 6px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      font-size: 1.5em;
+      flex-shrink: 0;
+    }
+
+    .bin-details {
+      flex: 1;
+    }
+
+    .bin-details .bin-label {
+      font-weight: 600;
+      font-size: 1em;
+      margin-bottom: 3px;
+    }
+
+    .bin-details .bin-date {
+      font-size: 1.1em;
+      color: #2c3e50;
+      font-weight: 700;
+    }
+
+    .bin-details .bin-freq {
+      font-size: 0.85em;
+      color: #95a5a6;
+      margin-top: 2px;
+    }
+
+    .bin-card.today {
+      border: 2px solid #4CAF50;
+    }
+
+    .bin-card.tomorrow {
+      border: 2px solid #FF9800;
+    }
+
+    .urgency {
+      font-size: 0.8em;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-top: 4px;
+    }
+
+    .urgency.today { background: #E8F5E9; color: #2E7D32; }
+    .urgency.tomorrow { background: #FFF3E0; color: #E65100; }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      padding: 20px;
+      font-size: 0.85em;
+      color: #bdc3c7;
+    }
+
+    footer a { color: #95a5a6; }
+
+    .day-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .day-buttons button {
+      flex: 1;
+      min-width: 80px;
+      padding: 10px 8px;
+      background: #ecf0f1;
+      color: #2c3e50;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      font-size: 0.9em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .day-buttons button:hover { background: #d5dbdb; }
+    .day-buttons button.active { border-color: #2c3e50; background: #2c3e50; color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Bin Night NI</h1>
+      <p>Newry, Mourne &amp; Down District Council</p>
+    </header>
+
+    <div class="search-box">
+      <label for="postcode">Enter your postcode</label>
+      <div class="search-row">
+        <input type="text" id="postcode" placeholder="e.g. BT34 1AB" maxlength="8"
+               autocomplete="postal-code" autocorrect="off" autocapitalize="characters">
+        <button onclick="lookup()">Go</button>
+      </div>
+      <p class="hint">Postcodes: BT23, BT24, BT25, BT27, BT30&ndash;BT35, BT60</p>
+    </div>
+
+    <div id="day-picker">
+      <div class="search-box">
+        <label>Or just select your collection day</label>
+        <p class="hint" style="margin-bottom:10px">Check your collection day on the <a href="https://www.newrymournedown.org/weekly-bin-collection-and-calendar" target="_blank">council website</a>, or look at the sticker on your bin.</p>
+        <div class="day-buttons">
+          <button onclick="lookupDay('MON')">Monday</button>
+          <button onclick="lookupDay('TUE')">Tuesday</button>
+          <button onclick="lookupDay('WED')">Wednesday</button>
+          <button onclick="lookupDay('THU')">Thursday</button>
+          <button onclick="lookupDay('FRI')">Friday</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="results"></div>
+
+    <footer>
+      <p>Data from <a href="https://www.newrymournedown.org/weekly-bin-collection-and-calendar">Newry, Mourne &amp; Down District Council</a></p>
+      <p>Proof of concept - verify dates with your council</p>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('postcode').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') lookup();
+    });
+
+    async function lookup() {
+      const postcode = document.getElementById('postcode').value.trim();
+      const results = document.getElementById('results');
+
+      if (!postcode) {
+        results.innerHTML = '<div class="error">Please enter your postcode</div>';
+        return;
+      }
+
+      results.innerHTML = '<p style="text-align:center;color:#95a5a6;padding:20px;">Looking up...</p>';
+
+      try {
+        const res = await fetch(`/api/lookup?postcode=${encodeURIComponent(postcode)}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          results.innerHTML = `<div class="error">${data.message || data.error}</div>`;
+          document.getElementById('day-picker').style.display = 'block';
+          return;
+        }
+
+        document.getElementById('day-picker').style.display = 'none';
+
+        let html = `
+          <div class="collection-day">
+            <h2>Your collection day</h2>
+            <div class="day-name">${data.day}s</div>
+            <div style="font-size:0.85em;color:#95a5a6;margin-top:4px">Out by 6:00am &middot; 3-week rotation &middot; Ref: ${data.ref || ''}</div>
+          </div>
+        `;
+
+        for (const col of data.nextCollections) {
+          const urgency = getUrgency(col.nextDate);
+          const urgencyHtml = urgency
+            ? `<span class="urgency ${urgency.class}">${urgency.label}</span>`
+            : '';
+          const cardClass = urgency ? ` ${urgency.class}` : '';
+          const phHtml = col.publicHolidayNote
+            ? `<div style="font-size:0.8em;color:#E65100;margin-top:2px">⚠ Public holiday: ${col.publicHolidayNote}</div>`
+            : '';
+
+          html += `
+            <div class="bin-card${cardClass}">
+              <div class="bin-icon" style="background: ${col.binColour}"></div>
+              <div class="bin-details">
+                <div class="bin-label">${col.label}</div>
+                <div class="bin-date">${formatDate(col.nextDate)}</div>
+                <div class="bin-freq">${col.frequency}</div>
+                ${urgencyHtml}
+                ${phHtml}
+              </div>
+            </div>
+          `;
+        }
+
+        results.innerHTML = html;
+      } catch (err) {
+        results.innerHTML = '<div class="error">Something went wrong. Please try again.</div>';
+      }
+    }
+
+    async function lookupDay(day) {
+      const results = document.getElementById('results');
+      // Highlight selected button
+      document.querySelectorAll('.day-buttons button').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      results.innerHTML = '<p style="text-align:center;color:#95a5a6;padding:20px;">Looking up...</p>';
+
+      try {
+        const res = await fetch(`/api/day?day=${day}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          results.innerHTML = `<div class="error">${data.message || data.error}</div>`;
+          return;
+        }
+
+        let html = `
+          <div class="collection-day">
+            <h2>Your collection day</h2>
+            <div class="day-name">${data.day}s</div>
+            <div style="font-size:0.85em;color:#95a5a6;margin-top:4px">Out by 6:00am &middot; 3-week rotation</div>
+          </div>
+        `;
+
+        for (const col of data.nextCollections) {
+          const urgency = getUrgency(col.nextDate);
+          const urgencyHtml = urgency
+            ? `<span class="urgency ${urgency.class}">${urgency.label}</span>`
+            : '';
+          const cardClass = urgency ? ` ${urgency.class}` : '';
+
+          html += `
+            <div class="bin-card${cardClass}">
+              <div class="bin-icon" style="background: ${col.binColour}"></div>
+              <div class="bin-details">
+                <div class="bin-label">${col.label}</div>
+                <div class="bin-date">${formatDate(col.nextDate)}</div>
+                <div class="bin-freq">${col.frequency}</div>
+                ${urgencyHtml}
+              </div>
+            </div>
+          `;
+        }
+
+        results.innerHTML = html;
+      } catch (err) {
+        results.innerHTML = '<div class="error">Something went wrong. Please try again.</div>';
+      }
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr + 'T00:00:00');
+      const options = { weekday: 'long', day: 'numeric', month: 'long' };
+      return date.toLocaleDateString('en-GB', options);
+    }
+
+    function getUrgency(dateStr) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const date = new Date(dateStr + 'T00:00:00');
+      const diffDays = Math.round((date - today) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) return { class: 'today', label: 'Today!' };
+      if (diffDays === 1) return { class: 'tomorrow', label: 'Tomorrow' };
+      return null;
+    }
+  </script>
+</body>
+</html>
