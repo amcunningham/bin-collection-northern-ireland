@@ -236,19 +236,31 @@ async function main() {
 
   // Launch browser
   console.log("Launching browser...");
+  const headless = args.includes("--headless");
   const browser = await puppeteer.launch({
-    headless: "new",
+    headless: headless ? "new" : false,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
   const page = await browser.newPage();
   await page.setUserAgent(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
   );
 
   // Navigate to the lookup page (this handles any bot challenge)
   console.log("Loading council lookup page...");
-  await page.goto(LOOKUP_URL, { waitUntil: "networkidle2", timeout: 30000 });
+  try {
+    await page.goto(LOOKUP_URL, { waitUntil: "networkidle2", timeout: 60000 });
+  } catch (navErr) {
+    // Cloudflare may cause an abort; wait and retry once
+    console.log("Initial load interrupted, waiting for challenge page...");
+    await new Promise((r) => setTimeout(r, 10000));
+    try {
+      await page.goto(LOOKUP_URL, { waitUntil: "networkidle2", timeout: 60000 });
+    } catch {
+      // Page may have loaded despite the error - check the title
+    }
+  }
   console.log(`Page loaded: ${await page.title()}`);
 
   // Single postcode test mode
