@@ -181,17 +181,97 @@ async function lookupInBrowser(page, prefix, suffix) {
     });
 
     if (scheduleLinks.length > 0) {
-      // Try to parse day/zone from the first PDF link URL
+      // Parse day/zone from ALL PDF links to check if they're consistent
+      const zones = new Set();
+      const pdfUrls = new Set();
+      for (const link of scheduleLinks) {
+        pdfUrls.add(link.href.replace(/\?.*$/, '')); // strip query params
+        const parsed = parseDayZoneFromUrl(link.href);
+        if (parsed) zones.add(parsed.ref);
+      }
+
       const firstLink = scheduleLinks[0];
       const urlResult = parseDayZoneFromUrl(firstLink.href);
+
       if (urlResult) {
-        return { status: "found", ...urlResult, pdfUrl: firstLink.href, addresses: scheduleLinks.length };
+        const result = {
+          status: "found", ...urlResult,
+          pdfUrl: firstLink.href,
+          addresses: scheduleLinks.length,
+        };
+        // Flag if different addresses have different zones
+        if (zones.size > 1) {
+          result.mixed = true;
+          result.allZones = [...zones];
+          result.allPdfUrls = [...pdfUrls];
+        }
+        return result;
       }
-      // If URL didn't contain zone info, return it for debugging
+
+      // href didn't contain zone info — click the first "View Schedule" button
+      // to see where it actually navigates (the real PDF URL may have zone info)
+      try {
+        // Listen for a popup (target="_blank" link) or navigation
+        const popupPromise = new Promise((resolve) => {
+          const handler = (target) => {
+            page.browser().off('targetcreated', handler);
+            resolve(target);
+          };
+          page.browser().on('targetcreated', handler);
+          // Timeout: if no popup opens within 8s, resolve null
+          setTimeout(() => {
+            page.browser().off('targetcreated', handler);
+            resolve(null);
+          }, 8000);
+        });
+
+        // Click the first "View Schedule" link
+        await page.evaluate(() => {
+          const links = [...document.querySelectorAll('a')];
+          const schedLink = links.find(a => {
+            const text = (a.textContent || '').toLowerCase().trim();
+            return text.includes('view schedule');
+          });
+          if (schedLink) schedLink.click();
+        });
+
+        const newTarget = await popupPromise;
+        if (newTarget) {
+          const newPage = await newTarget.page();
+          if (newPage) {
+            // Wait for it to load/redirect
+            await sleep(3000);
+            const realUrl = newPage.url();
+            await newPage.close();
+
+            const realResult = parseDayZoneFromUrl(realUrl);
+            if (realResult) {
+              const result = {
+                status: "found", ...realResult,
+                pdfUrl: realUrl,
+                addresses: scheduleLinks.length,
+              };
+              return result;
+            }
+            // Still no zone in URL — return what we have for debugging
+            return {
+              status: "found_addresses",
+              pdfUrl: realUrl,
+              addresses: scheduleLinks.length,
+              debug: `Popup PDF URL: ${realUrl}`,
+            };
+          }
+        }
+      } catch (clickErr) {
+        // Fall through to the fallback return below
+      }
+
+      // If clicking didn't help, return what we have for debugging
       return {
         status: "found_addresses",
         pdfUrl: firstLink.href,
         addresses: scheduleLinks.length,
+        allPdfUrls: [...pdfUrls],
         debug: `PDF URL: ${firstLink.href}`,
       };
     }
@@ -286,11 +366,17 @@ async function main() {
         ref: result.ref,
       };
       if (result.pdfUrl) zonesData.postcodes[pc].pdfUrl = result.pdfUrl;
+      if (result.mixed) {
+        zonesData.postcodes[pc].mixed = true;
+        zonesData.postcodes[pc].allZones = result.allZones;
+        console.log(`WARNING: Mixed zones at ${pc}! ${result.allZones.join(', ')}`);
+      }
       saveZones(zonesData);
-      console.log(`Saved: ${pc} -> ${result.ref}`);
+      console.log(`Saved: ${pc} -> ${result.ref} (${result.addresses} addresses)`);
     } else if (result.status === "found_addresses") {
       console.log(`Found ${result.addresses} address(es) but could not parse zone from PDF URL.`);
       console.log(`PDF URL: ${result.pdfUrl}`);
+      if (result.debug) console.log(result.debug);
       console.log("You may need to download this PDF to find the zone info.");
     }
 
@@ -360,11 +446,15 @@ async function main() {
         zone: result.zone,
         ref: result.ref,
       };
-      if (result.pdfUrl) zonesData.postcodes[pc].pdfUrl = result.pdfUrl;
+      if (result.mixed) {
+        zonesData.postcodes[pc].mixed = true;
+        zonesData.postcodes[pc].allZones = result.allZones;
+        process.stdout.write(`  * ${pc} -> MIXED: ${result.allZones.join(', ')}\n`);
+      } else {
+        process.stdout.write(`  + ${pc} -> ${result.ref}\n`);
+      }
       found++;
-      process.stdout.write(`  + ${pc} -> ${result.ref}\n`);
     } else if (result.status === "found_addresses") {
-      // Got addresses but couldn't parse zone from PDF URL - save what we have
       zonesData.postcodes[pc] = { pdfUrl: result.pdfUrl, addresses: result.addresses };
       found++;
       process.stdout.write(`  ~ ${pc} -> ${result.addresses} addresses (PDF: ${result.pdfUrl})\n`);

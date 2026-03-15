@@ -104,23 +104,11 @@ function postLookup(prefix, suffix) {
 }
 
 /**
- * Parse the day and zone from the council response HTML.
- *
- * Look for patterns like "WED Z2", "THURS V2", "MON Z1" etc.
- * Also look for collection day references in the page content.
+ * Normalize a day abbreviation and zone into a standard result object.
  */
-function parseDayZone(html) {
-  // Strip HTML tags to get text content
-  const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
-
-  // Pattern: DAY + ZONE (e.g. "WED Z2", "THURS V2")
-  const match = text.match(
-    /\b(MON|TUES?|WED|THURS?|FRI)\s+(Z\d+|V\d+)\b/i
-  );
-  if (!match) return null;
-
-  const refDay = match[1].toUpperCase();
-  const zone = match[2].toUpperCase();
+function makeDayZone(rawDay, zone) {
+  const refDay = rawDay.toUpperCase();
+  zone = zone.toUpperCase();
 
   const dayMap = {
     MON: "MON", TUE: "TUE", TUES: "TUE",
@@ -133,6 +121,33 @@ function parseDayZone(html) {
   };
 
   return { day, zone, ref: `${refPrefix[day]} ${zone}` };
+}
+
+/**
+ * Parse the day and zone from the council response HTML.
+ *
+ * The site now returns a list of addresses with "View Schedule" PDF links.
+ * PDF URLs encode the zone: e.g. /bin-collections/WED-Z2.pdf?v=5
+ *
+ * Falls back to matching "WED Z2" style text in the page body.
+ */
+function parseDayZone(html) {
+  // First: look for PDF links like /bin-collections/WED-Z2.pdf
+  const pdfMatch = html.match(
+    /href=["'][^"']*\/(MON|TUES?|WED|THURS?|FRI)-(Z\d+|V\d+)\.pdf[^"']*/i
+  );
+  if (pdfMatch) {
+    return makeDayZone(pdfMatch[1], pdfMatch[2]);
+  }
+
+  // Fallback: look for DAY + ZONE in page text
+  const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+  const match = text.match(
+    /\b(MON|TUES?|WED|THURS?|FRI)\s+(Z\d+|V\d+)\b/i
+  );
+  if (!match) return null;
+
+  return makeDayZone(match[1], match[2]);
 }
 
 /**
