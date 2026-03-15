@@ -71,7 +71,7 @@ function loadPostcodes(prefix) {
 }
 
 /**
- * Parse the day and zone from page text.
+ * Parse the day and zone from text (page text or PDF URL).
  */
 function parseDayZone(text) {
   const match = text.match(
@@ -93,6 +93,22 @@ function parseDayZone(text) {
   };
 
   return { day, zone, ref: `${refPrefix[day]} ${zone}` };
+}
+
+/**
+ * Parse day/zone from a PDF URL or filename.
+ * PDF URLs often encode the schedule reference, e.g.:
+ *   .../TUES%20Z3.pdf or .../MON-V1.pdf or .../thurs_z2.pdf
+ */
+function parseDayZoneFromUrl(url) {
+  // Decode percent-encoding so "TUES%20Z3" becomes "TUES Z3"
+  const decoded = decodeURIComponent(url);
+  // Try standard pattern with space, hyphen, or underscore separator
+  const match = decoded.match(
+    /\b(MON|TUES?|WED|THURS?|FRI)[\s_-]+(Z\d+|V\d+)\b/i
+  );
+  if (match) return parseDayZone(`${match[1]} ${match[2]}`);
+  return null;
 }
 
 /**
@@ -145,13 +161,46 @@ async function lookupInBrowser(page, prefix, suffix) {
     // Wait a moment for any dynamic content
     await sleep(500);
 
-    // Read the page text and parse it
-    const pageText = await page.evaluate(() => document.body.innerText);
-    const pageUrl = page.url();
-    const result = parseDayZone(pageText);
+    // The results page shows a list of addresses with "View Schedule" PDF links.
+    // Extract all schedule links and parse the day/zone from the PDF URL.
+    const scheduleLinks = await page.evaluate(() => {
+      const links = [...document.querySelectorAll('a')];
+      return links
+        .filter(a => {
+          const text = (a.textContent || '').toLowerCase().trim();
+          const href = a.href || '';
+          return (text.includes('view schedule') || text.includes('schedule')) &&
+                 (href.includes('.pdf') || href.includes('schedule'));
+        })
+        .map(a => ({
+          href: a.href,
+          text: a.textContent.trim(),
+          // Get the address text from the parent/sibling elements
+          context: a.parentElement?.textContent?.trim()?.slice(0, 100) || '',
+        }));
+    });
 
+    if (scheduleLinks.length > 0) {
+      // Try to parse day/zone from the first PDF link URL
+      const firstLink = scheduleLinks[0];
+      const urlResult = parseDayZoneFromUrl(firstLink.href);
+      if (urlResult) {
+        return { status: "found", ...urlResult, pdfUrl: firstLink.href, addresses: scheduleLinks.length };
+      }
+      // If URL didn't contain zone info, return it for debugging
+      return {
+        status: "found_addresses",
+        pdfUrl: firstLink.href,
+        addresses: scheduleLinks.length,
+        debug: `PDF URL: ${firstLink.href}`,
+      };
+    }
+
+    // Fallback: check page text directly for day/zone pattern
+    const pageText = await page.evaluate(() => document.body.innerText);
+    const result = parseDayZone(pageText);
     if (result) {
-      return { status: "found", ...result, url: pageUrl };
+      return { status: "found", ...result };
     }
 
     // Check for "not found" indicators
@@ -159,14 +208,9 @@ async function lookupInBrowser(page, prefix, suffix) {
       return { status: "not_found" };
     }
 
-    // If the page has no zone data, treat as not found
-    if (!pageText.match(/[ZV]\d+/)) {
-      // Log a snippet of the page text for debugging
-      const snippet = pageText.replace(/\s+/g, ' ').slice(0, 200);
-      return { status: "not_found", debug: snippet };
-    }
-
-    return { status: "no_match" };
+    // If the page has no zone data and no schedule links, treat as not found
+    const snippet = pageText.replace(/\s+/g, ' ').slice(0, 200);
+    return { status: "not_found", debug: snippet };
   } catch (err) {
     return { status: "error", reason: err.message };
   }
@@ -233,7 +277,7 @@ async function main() {
     const result = await lookupInBrowser(page, prefixArg, suffixArg);
     console.log("Result:", JSON.stringify(result, null, 2));
 
-    if (result.status === "found") {
+    if (result.status === "found" && result.day) {
       const zonesData = loadZones();
       const pc = `${prefixArg} ${suffixArg}`;
       zonesData.postcodes[pc] = {
@@ -241,8 +285,13 @@ async function main() {
         zone: result.zone,
         ref: result.ref,
       };
+      if (result.pdfUrl) zonesData.postcodes[pc].pdfUrl = result.pdfUrl;
       saveZones(zonesData);
       console.log(`Saved: ${pc} -> ${result.ref}`);
+    } else if (result.status === "found_addresses") {
+      console.log(`Found ${result.addresses} address(es) but could not parse zone from PDF URL.`);
+      console.log(`PDF URL: ${result.pdfUrl}`);
+      console.log("You may need to download this PDF to find the zone info.");
     }
 
     // Take a screenshot for debugging
@@ -305,14 +354,20 @@ async function main() {
 
     const result = await lookupInBrowser(page, prefix, suffix);
 
-    if (result.status === "found") {
+    if (result.status === "found" && result.day) {
       zonesData.postcodes[pc] = {
         day: result.day,
         zone: result.zone,
         ref: result.ref,
       };
+      if (result.pdfUrl) zonesData.postcodes[pc].pdfUrl = result.pdfUrl;
       found++;
       process.stdout.write(`  + ${pc} -> ${result.ref}\n`);
+    } else if (result.status === "found_addresses") {
+      // Got addresses but couldn't parse zone from PDF URL - save what we have
+      zonesData.postcodes[pc] = { pdfUrl: result.pdfUrl, addresses: result.addresses };
+      found++;
+      process.stdout.write(`  ~ ${pc} -> ${result.addresses} addresses (PDF: ${result.pdfUrl})\n`);
     } else if (result.status === "not_found" || result.status === "no_match") {
       notFound++;
     } else {
