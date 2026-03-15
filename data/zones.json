@@ -1,15 +1,255 @@
 {
   "_description": "Maps postcodes to their collection day and zone. Add more by looking up postcodes on newrymournedown.org/weekly-bin-collection-and-calendar",
   "_format": "postcode -> { day: MON|TUE|WED|THU|FRI, zone: string }",
-  "_postcodeAreas": ["BT23", "BT24", "BT25", "BT27", "BT30", "BT31", "BT32", "BT33", "BT34", "BT35", "BT60"],
+  "_postcodeAreas": [
+    "BT23",
+    "BT24",
+    "BT25",
+    "BT27",
+    "BT30",
+    "BT31",
+    "BT32",
+    "BT33",
+    "BT34",
+    "BT35",
+    "BT60"
+  ],
   "_zoneNaming": "Zone letters (Z, V) are geographic area identifiers shared across days. The ref is DAY + ZONE (e.g. MON Z1, TUES Z2, WED Z2 are different schedules). Both Z and V zones appear on multiple days.",
   "postcodes": {
-    "BT34 4HS": { "day": "WED", "zone": "Z2", "ref": "WED Z2" },
-    "BT34 4HP": { "day": "THU", "zone": "V2", "ref": "THURS V2" },
-    "BT34 4RZ": { "day": "TUE", "zone": "Z2", "ref": "TUES Z2" },
-    "BT34 4RT": { "day": "WED", "zone": "Z2", "ref": "WED Z2" },
-    "BT30 6BP": { "day": "WED", "zone": "Z1", "ref": "WED Z1" },
-    "BT34 3BG": { "day": "FRI", "zone": "V2", "ref": "FRI V2" },
-    "BT34 3BP": { "day": "MON", "zone": "Z1", "ref": "MON Z1" }
+    "BT34 4HS": {
+      "day": "WED",
+      "zone": "Z2",
+      "ref": "WED Z2"
+    },
+    "BT34 4HP": {
+      "day": "THU",
+      "zone": "V2",
+      "ref": "THURS V2"
+    },
+    "BT34 4RZ": {
+      "day": "TUE",
+      "zone": "Z2",
+      "ref": "TUES Z2"
+    },
+    "BT34 4RT": {
+      "day": "WED",
+      "zone": "Z2",
+      "ref": "WED Z2"
+    },
+    "BT30 6BP": {
+      "day": "WED",
+      "zone": "Z1",
+      "ref": "WED Z1"
+    },
+    "BT34 3BG": {
+      "day": "FRI",
+      "zone": "V2",
+      "ref": "FRI V2"
+    },
+    "BT34 3BP": {
+      "day": "MON",
+      "zone": "Z1",
+      "ref": "MON Z1"
+    },
+    "BT34 1AA": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AB": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 94
+    },
+    "BT34 1AD": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AE": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AF": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 4
+    },
+    "BT34 1AG": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AH": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AJ": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AL": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AN": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 3
+    },
+    "BT34 1AP": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AQ": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 7
+    },
+    "BT34 1AR": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 3
+    },
+    "BT34 1AS": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 26
+    },
+    "BT34 1AT": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 3
+    },
+    "BT34 1AU": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AW": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AX": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AY": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1AZ": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BA": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BB": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BD": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BE": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 8
+    },
+    "BT34 1BF": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 20
+    },
+    "BT34 1BG": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BH": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 6
+    },
+    "BT34 1BJ": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 10
+    },
+    "BT34 1BL": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BN": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 44
+    },
+    "BT34 1BP": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BQ": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BR": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BS": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BT": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BU": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BW": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 14
+    },
+    "BT34 1BX": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 3
+    },
+    "BT34 1BY": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1BZ": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 3
+    },
+    "BT34 1DA": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 23
+    },
+    "BT34 1DB": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 3
+    },
+    "BT34 1DD": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 3
+    },
+    "BT34 1DE": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1DF": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 4
+    },
+    "BT34 1DG": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1DH": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 2
+    },
+    "BT34 1DJ": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 14
+    },
+    "BT34 1DL": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 51
+    },
+    "BT34 1DN": {
+      "pdfUrl": "https://www.newrymournedown.org/schedule-of-applications",
+      "addresses": 8
+    }
   }
 }
