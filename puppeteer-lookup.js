@@ -207,7 +207,66 @@ async function lookupInBrowser(page, prefix, suffix) {
         }
         return result;
       }
-      // If URL didn't contain zone info, return it for debugging
+
+      // href didn't contain zone info — click the first "View Schedule" button
+      // to see where it actually navigates (the real PDF URL may have zone info)
+      try {
+        // Listen for a popup (target="_blank" link) or navigation
+        const popupPromise = new Promise((resolve) => {
+          const handler = (target) => {
+            page.browser().off('targetcreated', handler);
+            resolve(target);
+          };
+          page.browser().on('targetcreated', handler);
+          // Timeout: if no popup opens within 8s, resolve null
+          setTimeout(() => {
+            page.browser().off('targetcreated', handler);
+            resolve(null);
+          }, 8000);
+        });
+
+        // Click the first "View Schedule" link
+        await page.evaluate(() => {
+          const links = [...document.querySelectorAll('a')];
+          const schedLink = links.find(a => {
+            const text = (a.textContent || '').toLowerCase().trim();
+            return text.includes('view schedule');
+          });
+          if (schedLink) schedLink.click();
+        });
+
+        const newTarget = await popupPromise;
+        if (newTarget) {
+          const newPage = await newTarget.page();
+          if (newPage) {
+            // Wait for it to load/redirect
+            await sleep(3000);
+            const realUrl = newPage.url();
+            await newPage.close();
+
+            const realResult = parseDayZoneFromUrl(realUrl);
+            if (realResult) {
+              const result = {
+                status: "found", ...realResult,
+                pdfUrl: realUrl,
+                addresses: scheduleLinks.length,
+              };
+              return result;
+            }
+            // Still no zone in URL — return what we have for debugging
+            return {
+              status: "found_addresses",
+              pdfUrl: realUrl,
+              addresses: scheduleLinks.length,
+              debug: `Popup PDF URL: ${realUrl}`,
+            };
+          }
+        }
+      } catch (clickErr) {
+        // Fall through to the fallback return below
+      }
+
+      // If clicking didn't help, return what we have for debugging
       return {
         status: "found_addresses",
         pdfUrl: firstLink.href,
@@ -316,7 +375,9 @@ async function main() {
       console.log(`Saved: ${pc} -> ${result.ref} (${result.addresses} addresses)`);
     } else if (result.status === "found_addresses") {
       console.log(`Found ${result.addresses} address(es) but could not parse zone from PDF URL.`);
-      console.log(`PDF URLs: ${result.allPdfUrls?.join(', ')}`);
+      console.log(`PDF URL: ${result.pdfUrl}`);
+      if (result.debug) console.log(result.debug);
+      console.log("You may need to download this PDF to find the zone info.");
     }
 
     // Take a screenshot for debugging
