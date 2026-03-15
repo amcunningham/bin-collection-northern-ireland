@@ -313,11 +313,12 @@ async function main() {
       }
     }
 
-    // Step 1: Select prefix
+    // Step 1: Select prefix (target PostcodeBT by name)
     console.log("Step 1: Selecting prefix...");
     const selectResult = await targetFrame.evaluate((pfx) => {
-      const selects = document.querySelectorAll("select");
-      for (const sel of selects) {
+      // First try the known field name
+      const sel = document.querySelector('select[name="PostcodeBT"]');
+      if (sel) {
         for (const opt of sel.options) {
           if (opt.value === pfx || opt.text.trim() === pfx || opt.text.includes(pfx)) {
             sel.value = opt.value;
@@ -326,25 +327,44 @@ async function main() {
           }
         }
       }
-      return { found: false, selectCount: selects.length };
+      // Fallback: search all selects
+      for (const s of document.querySelectorAll("select")) {
+        for (const opt of s.options) {
+          if (opt.value === pfx || opt.text.trim() === pfx) {
+            s.value = opt.value;
+            s.dispatchEvent(new Event("change", { bubbles: true }));
+            return { found: true, id: s.id, name: s.name, value: opt.value, text: opt.text };
+          }
+        }
+      }
+      return { found: false, selectCount: document.querySelectorAll("select").length };
     }, prefix);
     console.log("  Result:", JSON.stringify(selectResult));
 
     await new Promise((r) => setTimeout(r, 1000));
 
-    // Step 2: Fill suffix
+    // Step 2: Fill suffix (target PostcodeEND by name)
     console.log("Step 2: Filling suffix...");
     const inputResult = await targetFrame.evaluate((sfx) => {
-      const inputs = [...document.querySelectorAll("input")]
-        .filter((i) => i.type !== "hidden" && i.offsetParent !== null);
-      for (const inp of inputs) {
-        // Skip if it looks like a search box for the whole site
-        if (inp.type === "search") continue;
+      // First try the known field name
+      const inp = document.querySelector('input[name="PostcodeEND"]');
+      if (inp) {
         inp.focus();
         inp.value = sfx;
         inp.dispatchEvent(new Event("input", { bubbles: true }));
         inp.dispatchEvent(new Event("change", { bubbles: true }));
         return { found: true, id: inp.id, name: inp.name, placeholder: inp.placeholder };
+      }
+      // Fallback: find a text input that isn't the site search
+      const inputs = [...document.querySelectorAll("input")]
+        .filter((i) => i.type !== "hidden" && i.type !== "search" &&
+                       i.name !== "keyword" && i.offsetParent !== null);
+      for (const i of inputs) {
+        i.focus();
+        i.value = sfx;
+        i.dispatchEvent(new Event("input", { bubbles: true }));
+        i.dispatchEvent(new Event("change", { bubbles: true }));
+        return { found: true, id: i.id, name: i.name, placeholder: i.placeholder };
       }
       return { found: false, inputCount: inputs.length };
     }, suffix);
@@ -352,32 +372,25 @@ async function main() {
 
     await new Promise((r) => setTimeout(r, 500));
 
-    // Step 3: Click search
+    // Step 3: Click search (target submit_btn to avoid site-wide search)
     console.log("Step 3: Clicking search...");
     const searchResult = await targetFrame.evaluate(() => {
-      const candidates = [
-        ...document.querySelectorAll("button, input[type='submit'], input[type='button'], a"),
-      ];
-      for (const btn of candidates) {
-        const text = (btn.textContent || btn.value || "").toLowerCase().trim();
-        if (
-          text.includes("search") ||
-          text.includes("find") ||
-          text.includes("look up") ||
-          text.includes("go") ||
-          text.includes("submit")
-        ) {
-          btn.click();
-          return { clicked: true, text, tag: btn.tagName, id: btn.id };
+      // First try the known submit button
+      const submitBtn = document.querySelector('input[name="submit_btn"], button[name="submit_btn"]');
+      if (submitBtn) {
+        submitBtn.click();
+        return { clicked: true, text: submitBtn.value || submitBtn.textContent, tag: submitBtn.tagName, id: submitBtn.id, name: submitBtn.name };
+      }
+      // Fallback: find the form containing PostcodeBT and submit it
+      const postcodeSelect = document.querySelector('select[name="PostcodeBT"]');
+      if (postcodeSelect) {
+        const form = postcodeSelect.closest("form");
+        if (form) {
+          form.submit();
+          return { clicked: true, text: "form.submit()", tag: "FORM" };
         }
       }
-      // Fallback: try submitting the form directly
-      const form = document.querySelector("form");
-      if (form) {
-        form.submit();
-        return { clicked: true, text: "form.submit()", tag: "FORM" };
-      }
-      return { clicked: false, candidateCount: candidates.length };
+      return { clicked: false };
     });
     console.log("  Result:", JSON.stringify(searchResult));
 

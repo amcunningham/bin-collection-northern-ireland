@@ -111,19 +111,26 @@ async function lookupInBrowser(page, prefix, suffix) {
       }
     }
 
-    // Select the BT prefix in the dropdown
+    // Select the BT prefix in the dropdown (target by name "PostcodeBT")
     const selectResult = await targetFrame.evaluate((pfx) => {
-      const selects = document.querySelectorAll("select");
-      for (const sel of selects) {
+      // First try the known field name
+      const sel = document.querySelector('select[name="PostcodeBT"]');
+      if (sel) {
         for (const opt of sel.options) {
-          if (
-            opt.value === pfx ||
-            opt.text.trim() === pfx ||
-            opt.text.includes(pfx)
-          ) {
+          if (opt.value === pfx || opt.text.trim() === pfx || opt.text.includes(pfx)) {
             sel.value = opt.value;
             sel.dispatchEvent(new Event("change", { bubbles: true }));
             return { found: true, name: sel.name };
+          }
+        }
+      }
+      // Fallback: search all selects for one with BT options
+      for (const s of document.querySelectorAll("select")) {
+        for (const opt of s.options) {
+          if (opt.value === pfx || opt.text.trim() === pfx) {
+            s.value = opt.value;
+            s.dispatchEvent(new Event("change", { bubbles: true }));
+            return { found: true, name: s.name };
           }
         }
       }
@@ -134,17 +141,29 @@ async function lookupInBrowser(page, prefix, suffix) {
       return { status: "error", reason: "prefix dropdown not found" };
     }
 
-    // Fill the suffix input
+    // Fill the suffix input (target by name "PostcodeEND")
     const inputResult = await targetFrame.evaluate((sfx) => {
-      const inputs = [...document.querySelectorAll("input")].filter(
-        (i) => i.type !== "hidden" && i.type !== "search" && i.offsetParent !== null
-      );
-      for (const inp of inputs) {
+      // First try the known field name
+      const inp = document.querySelector('input[name="PostcodeEND"]');
+      if (inp) {
         inp.focus();
         inp.value = sfx;
         inp.dispatchEvent(new Event("input", { bubbles: true }));
         inp.dispatchEvent(new Event("change", { bubbles: true }));
         return { found: true, name: inp.name };
+      }
+      // Fallback: find a text input near the postcode dropdown, skipping site search
+      const inputs = [...document.querySelectorAll("input")].filter(
+        (i) => i.type !== "hidden" && i.type !== "search" &&
+               i.name !== "keyword" && i.offsetParent !== null &&
+               !i.closest('.search-bar, .site-search, #search, header')
+      );
+      for (const i of inputs) {
+        i.focus();
+        i.value = sfx;
+        i.dispatchEvent(new Event("input", { bubbles: true }));
+        i.dispatchEvent(new Event("change", { bubbles: true }));
+        return { found: true, name: i.name };
       }
       return { found: false };
     }, suffix);
@@ -153,32 +172,24 @@ async function lookupInBrowser(page, prefix, suffix) {
       return { status: "error", reason: "suffix input not found" };
     }
 
-    // Click the search button and wait for navigation
+    // Click the search button (target by name "submit_btn" to avoid site-wide search)
     const [response] = await Promise.all([
       page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => null),
       targetFrame.evaluate(() => {
-        const candidates = [
-          ...document.querySelectorAll(
-            "button, input[type='submit'], input[type='button'], a"
-          ),
-        ];
-        for (const btn of candidates) {
-          const text = (btn.textContent || btn.value || "").toLowerCase().trim();
-          if (
-            text.includes("search") ||
-            text.includes("find") ||
-            text.includes("look up") ||
-            text.includes("go") ||
-            text.includes("submit")
-          ) {
-            btn.click();
-            return { clicked: true };
-          }
+        // First try the known submit button
+        const submitBtn = document.querySelector('input[name="submit_btn"], button[name="submit_btn"]');
+        if (submitBtn) {
+          submitBtn.click();
+          return { clicked: true, name: submitBtn.name };
         }
-        const form = document.querySelector("form");
-        if (form) {
-          form.submit();
-          return { clicked: true };
+        // Fallback: find the form containing PostcodeBT and submit it
+        const postcodeSelect = document.querySelector('select[name="PostcodeBT"]');
+        if (postcodeSelect) {
+          const form = postcodeSelect.closest("form");
+          if (form) {
+            form.submit();
+            return { clicked: true, method: "form.submit" };
+          }
         }
         return { clicked: false };
       }),
@@ -262,6 +273,22 @@ async function main() {
     }
   }
   console.log(`Page loaded: ${await page.title()}`);
+
+  // Dismiss cookie consent banner if present
+  try {
+    await page.evaluate(() => {
+      const buttons = [...document.querySelectorAll("button, a")];
+      for (const btn of buttons) {
+        const text = (btn.textContent || "").toLowerCase().trim();
+        if (text === "accept" || text === "accept all" || text === "accept cookies") {
+          btn.click();
+          return true;
+        }
+      }
+      return false;
+    });
+    await sleep(500);
+  } catch {}
 
   // Single postcode test mode
   if (prefixArg && suffixArg) {
