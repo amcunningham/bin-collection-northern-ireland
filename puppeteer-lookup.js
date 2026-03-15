@@ -97,102 +97,49 @@ function parseDayZone(text) {
 
 /**
  * Perform a single lookup using the browser page.
- * Fills the form, submits, and reads the result.
+ * Uses Puppeteer's native methods (select, type, click) to simulate
+ * real user interaction with the council's bin collection form.
+ *
+ * Form structure (from inspect-page.js):
+ *   form#mainbodyform.form_search_bin (POST to same page with #search)
+ *     select#PostcodeBT  - BT prefix dropdown (BT23..BT60)
+ *     input#PostcodeEND  - suffix text field (e.g. "4HS")
+ *     input#submit_btn   - SEARCH button (type=submit)
+ *     hidden: postback=1
  */
 async function lookupInBrowser(page, prefix, suffix) {
   try {
-    // Determine which frame has the form (main page or iframe)
-    let targetFrame = page;
-    for (const frame of page.frames()) {
-      const fUrl = frame.url();
-      if (fUrl && !["about:blank", page.url()].includes(fUrl)) {
-        targetFrame = frame;
-        break;
-      }
+    // Check the form exists on the page
+    const formExists = await page.$('#PostcodeBT');
+    if (!formExists) {
+      return { status: "error", reason: "PostcodeBT dropdown not found on page" };
     }
 
-    // Select the BT prefix in the dropdown (target by name "PostcodeBT")
-    const selectResult = await targetFrame.evaluate((pfx) => {
-      // First try the known field name
-      const sel = document.querySelector('select[name="PostcodeBT"]');
-      if (sel) {
-        for (const opt of sel.options) {
-          if (opt.value === pfx || opt.text.trim() === pfx || opt.text.includes(pfx)) {
-            sel.value = opt.value;
-            sel.dispatchEvent(new Event("change", { bubbles: true }));
-            return { found: true, name: sel.name };
-          }
-        }
+    // Ensure the hidden postback field exists (required by the server)
+    await page.evaluate(() => {
+      const form = document.querySelector('#mainbodyform');
+      if (form && !form.querySelector('input[name="postback"]')) {
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'postback';
+        hidden.value = '1';
+        form.appendChild(hidden);
       }
-      // Fallback: search all selects for one with BT options
-      for (const s of document.querySelectorAll("select")) {
-        for (const opt of s.options) {
-          if (opt.value === pfx || opt.text.trim() === pfx) {
-            s.value = opt.value;
-            s.dispatchEvent(new Event("change", { bubbles: true }));
-            return { found: true, name: s.name };
-          }
-        }
-      }
-      return { found: false };
-    }, prefix);
+    });
 
-    if (!selectResult.found) {
-      return { status: "error", reason: "prefix dropdown not found" };
-    }
+    // Step 1: Select the BT prefix from the dropdown
+    await page.select('#PostcodeBT', prefix);
+    await sleep(300);
 
-    // Fill the suffix input (target by name "PostcodeEND")
-    const inputResult = await targetFrame.evaluate((sfx) => {
-      // First try the known field name
-      const inp = document.querySelector('input[name="PostcodeEND"]');
-      if (inp) {
-        inp.focus();
-        inp.value = sfx;
-        inp.dispatchEvent(new Event("input", { bubbles: true }));
-        inp.dispatchEvent(new Event("change", { bubbles: true }));
-        return { found: true, name: inp.name };
-      }
-      // Fallback: find a text input near the postcode dropdown, skipping site search
-      const inputs = [...document.querySelectorAll("input")].filter(
-        (i) => i.type !== "hidden" && i.type !== "search" &&
-               i.name !== "keyword" && i.offsetParent !== null &&
-               !i.closest('.search-bar, .site-search, #search, header')
-      );
-      for (const i of inputs) {
-        i.focus();
-        i.value = sfx;
-        i.dispatchEvent(new Event("input", { bubbles: true }));
-        i.dispatchEvent(new Event("change", { bubbles: true }));
-        return { found: true, name: i.name };
-      }
-      return { found: false };
-    }, suffix);
+    // Step 2: Clear and type the suffix into the postcode input
+    await page.click('#PostcodeEND', { clickCount: 3 }); // select all existing text
+    await page.type('#PostcodeEND', suffix);
+    await sleep(200);
 
-    if (!inputResult.found) {
-      return { status: "error", reason: "suffix input not found" };
-    }
-
-    // Click the search button (target by name "submit_btn" to avoid site-wide search)
-    const [response] = await Promise.all([
+    // Step 3: Click SEARCH and wait for navigation
+    await Promise.all([
       page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => null),
-      targetFrame.evaluate(() => {
-        // First try the known submit button
-        const submitBtn = document.querySelector('input[name="submit_btn"], button[name="submit_btn"]');
-        if (submitBtn) {
-          submitBtn.click();
-          return { clicked: true, name: submitBtn.name };
-        }
-        // Fallback: find the form containing PostcodeBT and submit it
-        const postcodeSelect = document.querySelector('select[name="PostcodeBT"]');
-        if (postcodeSelect) {
-          const form = postcodeSelect.closest("form");
-          if (form) {
-            form.submit();
-            return { clicked: true, method: "form.submit" };
-          }
-        }
-        return { clicked: false };
-      }),
+      page.click('#submit_btn'),
     ]);
 
     // Wait a moment for any dynamic content
@@ -200,23 +147,11 @@ async function lookupInBrowser(page, prefix, suffix) {
 
     // Read the page text and parse it
     const pageText = await page.evaluate(() => document.body.innerText);
+    const pageUrl = page.url();
     const result = parseDayZone(pageText);
 
     if (result) {
-      return { status: "found", ...result };
-    }
-
-    // Also check iframe text
-    if (targetFrame !== page) {
-      try {
-        const frameText = await targetFrame.evaluate(
-          () => document.body.innerText
-        );
-        const frameResult = parseDayZone(frameText);
-        if (frameResult) {
-          return { status: "found", ...frameResult };
-        }
-      } catch {}
+      return { status: "found", ...result, url: pageUrl };
     }
 
     // Check for "not found" indicators
@@ -224,9 +159,11 @@ async function lookupInBrowser(page, prefix, suffix) {
       return { status: "not_found" };
     }
 
-    // If the page has the form but no zone data, treat as not found
+    // If the page has no zone data, treat as not found
     if (!pageText.match(/[ZV]\d+/)) {
-      return { status: "not_found" };
+      // Log a snippet of the page text for debugging
+      const snippet = pageText.replace(/\s+/g, ' ').slice(0, 200);
+      return { status: "not_found", debug: snippet };
     }
 
     return { status: "no_match" };
@@ -385,14 +322,21 @@ async function main() {
           `  ! ${pc}: ${result.status} ${result.reason || ""}\n`
         );
       }
-      // If we get 10+ consecutive errors, the page might be broken - reload
-      if (errors > 0 && errors % 10 === 0) {
-        console.log("  (reloading page after errors...)");
-        await page.goto(LOOKUP_URL, {
-          waitUntil: "networkidle2",
-          timeout: 30000,
-        });
-      }
+    }
+
+    // Reload the form page for the next lookup (form POST navigates away)
+    try {
+      await page.goto(LOOKUP_URL, {
+        waitUntil: "networkidle2",
+        timeout: 30000,
+      });
+    } catch {
+      // Retry once on navigation error
+      await sleep(2000);
+      await page.goto(LOOKUP_URL, {
+        waitUntil: "networkidle2",
+        timeout: 30000,
+      });
     }
 
     // Save checkpoint every 25 finds
