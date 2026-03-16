@@ -165,33 +165,52 @@ async function lookupInBrowser(page, prefix, suffix) {
     // Extract all schedule links and parse the day/zone from the PDF URL.
     const scheduleLinks = await page.evaluate(() => {
       const links = [...document.querySelectorAll('a')];
-      return links
-        .filter(a => {
-          const text = (a.textContent || '').toLowerCase().trim();
-          const href = a.href || '';
-          return (text.includes('view schedule') || text.includes('schedule')) &&
-                 (href.includes('.pdf') || href.includes('schedule'));
-        })
-        .map(a => ({
-          href: a.href,
-          text: a.textContent.trim(),
-          // Get the address text from the parent/sibling elements
-          context: a.parentElement?.textContent?.trim()?.slice(0, 100) || '',
-        }));
+      // First pass: find links that are clearly bin collection PDFs
+      // (contain .pdf and have day/zone pattern like WED-Z2, or "bin-collection" in URL)
+      const binPdfLinks = links.filter(a => {
+        const href = a.href || '';
+        const decodedHref = decodeURIComponent(href).toUpperCase();
+        const hasPdf = href.includes('.pdf');
+        const hasDayZone = /\b(MON|TUES?|WED|THURS?|FRI)[\s_%-]+(Z\d+|V\d+)\b/i.test(decodedHref);
+        const isBinCollection = /bin.?collect/i.test(href);
+        return hasPdf && (hasDayZone || isBinCollection);
+      });
+
+      // Second pass: broader filter for "View Schedule" links
+      const viewScheduleLinks = links.filter(a => {
+        const text = (a.textContent || '').toLowerCase().trim();
+        const href = a.href || '';
+        return (text.includes('view schedule') || text.includes('schedule')) &&
+               (href.includes('.pdf') || href.includes('schedule'));
+      });
+
+      // Prefer bin PDF links if found, otherwise fall back to broader match
+      const chosen = binPdfLinks.length > 0 ? binPdfLinks : viewScheduleLinks;
+      return chosen.map(a => ({
+        href: a.href,
+        text: a.textContent.trim(),
+        context: a.parentElement?.textContent?.trim()?.slice(0, 100) || '',
+      }));
     });
 
     if (scheduleLinks.length > 0) {
       // Parse day/zone from ALL PDF links to check if they're consistent
       const zones = new Set();
       const pdfUrls = new Set();
+      const linksWithZone = [];
       for (const link of scheduleLinks) {
         pdfUrls.add(link.href.replace(/\?.*$/, '')); // strip query params
         const parsed = parseDayZoneFromUrl(link.href);
-        if (parsed) zones.add(parsed.ref);
+        if (parsed) {
+          zones.add(parsed.ref);
+          linksWithZone.push({ link, parsed });
+        }
       }
 
-      const firstLink = scheduleLinks[0];
-      const urlResult = parseDayZoneFromUrl(firstLink.href);
+      // Prefer a link that has a parseable day/zone in its URL
+      const bestMatch = linksWithZone.length > 0 ? linksWithZone[0] : null;
+      const firstLink = bestMatch ? bestMatch.link : scheduleLinks[0];
+      const urlResult = bestMatch ? bestMatch.parsed : null;
 
       if (urlResult) {
         const result = {
