@@ -247,7 +247,7 @@
     <div class="wrap">
       <p class="eyebrow">Protect the NHS</p>
       <h1>Ask your MP to scrutinise the UK–US pharmaceutical trade deal</h1>
-      <p class="lede">A new analysis warns the deal could divert tens of billions from patient care. Find your MP in seconds and send them a letter — from your own email account — in a couple of minutes.</p>
+      <p class="lede">A new analysis warns the deal could divert tens of billions from patient care. Find your MP in seconds and send them a letter — via WriteToThem or your own email — in a couple of minutes.</p>
     </div>
   </header>
 
@@ -282,7 +282,7 @@
       <hr style="border:none;border-top:1px solid var(--line);margin:22px 0;" />
 
       <p class="step-label"><span class="step-num">3</span> Your details</p>
-      <p class="hint">MPs only act for their own constituents, so include your name and address. These are inserted into the letter on this page and sent only when <em>you</em> press send in your email app.</p>
+      <p class="hint">MPs only act for their own constituents, so include your name and address. These are inserted into the letter on this page — you send it yourself, via WriteToThem or your own email.</p>
       <div class="grid2">
         <div class="field">
           <label for="name">Full name</label>
@@ -309,15 +309,15 @@
       <textarea id="letter" spellcheck="true"></textarea>
 
       <div class="btn-row" style="margin-top:18px;">
-        <a class="btn big" id="send-btn" href="#" role="button">✉️ Open email to your MP</a>
+        <button type="button" class="btn big" id="wtt-primary">📮 Copy letter &amp; send via WriteToThem</button>
       </div>
       <div class="btn-row" style="margin-top:10px;">
-        <button type="button" class="btn secondary" id="copy-btn">Copy letter</button>
-        <a class="btn secondary" id="wtt-btn" target="_blank" rel="noopener" href="https://www.writetothem.com/">Use WriteToThem instead</a>
+        <a class="btn secondary hidden" id="send-btn" href="#" role="button">✉️ Or email your MP directly</a>
+        <button type="button" class="btn secondary" id="copy-btn">Copy letter only</button>
       </div>
 
       <p class="note" id="send-note">
-        Pressing <strong>Open email to your MP</strong> opens a new message in your own email app, pre-addressed and pre-filled. Read it over, then hit send yourself — so it comes genuinely from you as a constituent.
+        <strong>WriteToThem</strong> (by mySociety) reliably delivers to any MP. Pressing the button copies your letter and opens WriteToThem in a new tab — enter your postcode, then <strong>paste your letter</strong> into the message box. WriteToThem asks you to write in your own words, so feel free to tweak it there before sending.
       </p>
 
       <details class="facts">
@@ -498,33 +498,54 @@
       }
     }
 
+    function writeToThemURL() {
+      var pc = normalisePostcode($("postcode").value);
+      // WriteToThem's homepage postcode form uses a `pc` GET parameter; if it's
+      // ignored the visitor simply re-enters the postcode we already show them.
+      return "https://www.writetothem.com/" + (pc ? "?pc=" + encodeURIComponent(pc) : "");
+    }
+
     function updateSendTargets() {
       var mp = state.mp;
       var subject = "Constituent concern: NHS funding impact of the UK–US pharmaceutical trade deal";
       var body = $("letter").value;
       var sendBtn = $("send-btn");
       var note = $("send-note");
-      var wtt = $("wtt-btn");
 
-      // WriteToThem search by postcode is the universal fallback.
-      var pc = normalisePostcode($("postcode").value);
-      wtt.href = "https://www.writetothem.com/" + (pc ? "?a=westminster&pc=" + encodeURIComponent(pc) : "");
-
+      // Direct email is the optional secondary path — only when Parliament
+      // publishes an address for this MP.
       if (mp && mp.email) {
         sendBtn.href = "mailto:" + encodeURIComponent(mp.email) +
           "?subject=" + encodeURIComponent(subject) +
           "&body=" + encodeURIComponent(body);
-        sendBtn.textContent = "✉️ Email " + mp.name;
+        sendBtn.textContent = "✉️ Or email " + mp.name + " directly";
         sendBtn.classList.remove("hidden");
-        note.innerHTML = "Pressing <strong>Email " + escapeHTML(mp.name) +
-          "</strong> opens a new message to <strong>" + escapeHTML(mp.email) +
-          "</strong> in your own email app, pre-filled. Read it over, then hit send yourself.";
-      } else if (mp) {
-        // No published email — steer to WriteToThem, keep letter copyable.
+      } else {
         sendBtn.classList.add("hidden");
-        note.innerHTML = "We couldn't find a published email address for " + escapeHTML(mp.name) +
-          " in the Parliament API. Use <strong>Use WriteToThem instead</strong> below (it delivers to any MP by postcode), " +
-          "or <strong>Copy letter</strong> and paste it in. Your letter is ready above.";
+      }
+
+      if (mp) {
+        var extra = mp.email
+          ? " Prefer email? Use the direct-email button below — it opens a pre-filled message to <strong>" +
+            escapeHTML(mp.email) + "</strong> in your own mail app."
+          : "";
+        note.innerHTML = "<strong>WriteToThem</strong> (by mySociety) reliably delivers to " +
+          escapeHTML(mp.name) + ". Pressing the button copies your letter and opens WriteToThem in a new tab — " +
+          "enter your postcode, then <strong>paste your letter</strong> into the message box and send." + extra;
+      }
+    }
+
+    function sendViaWriteToThem() {
+      var text = $("letter").value;
+      var open = function () { window.open(writeToThemURL(), "_blank", "noopener"); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          toast("Letter copied — paste it into WriteToThem");
+          open();
+        }, function () { fallbackCopy(text, function () { toast("Letter selected — press Ctrl/Cmd+C, then paste"); }); open(); });
+      } else {
+        fallbackCopy(text, function () {});
+        open();
       }
     }
 
@@ -597,6 +618,8 @@
       updateSendTargets();
       toast("Letter reset to the template");
     });
+
+    $("wtt-primary").addEventListener("click", sendViaWriteToThem);
 
     $("copy-btn").addEventListener("click", function () {
       var text = $("letter").value;

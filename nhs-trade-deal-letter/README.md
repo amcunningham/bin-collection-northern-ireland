@@ -17,13 +17,17 @@ stored.
    published, their **email address**.
 4. The letter is pre-filled with the visitor's details and the MP's, and stays
    fully **editable** so people can personalise it.
-5. **Open email to your MP** launches a `mailto:` message in the visitor's own
-   email client, pre-addressed and pre-filled — they read it and press send
-   themselves, so it comes genuinely from them as a constituent.
+5. **Copy letter & send via WriteToThem** (the primary path) copies the letter
+   and opens [WriteToThem](https://www.writetothem.com/) (by mySociety), which
+   reliably delivers to any MP by postcode. The visitor pastes the letter into
+   WriteToThem's message box and sends. WriteToThem intentionally does **not**
+   accept a pre-filled message body via URL — it asks people to write in their
+   own words — so the copy-then-paste step is by design.
+6. **Or email your MP directly** (secondary) is offered when Parliament
+   publishes an address for that MP: it launches a `mailto:` message,
+   pre-addressed and pre-filled, in the visitor's own email client.
 
-If Parliament publishes no email for an MP, the page falls back to
-[WriteToThem](https://www.writetothem.com/), which delivers to any MP by
-postcode, plus a **Copy letter** button.
+A standalone **Copy letter only** button is always available too.
 
 ## Running / hosting
 
