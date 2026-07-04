@@ -247,7 +247,7 @@
     <div class="wrap">
       <p class="eyebrow">Protect the NHS</p>
       <h1>Ask your MP to scrutinise the UK–US pharmaceutical trade deal</h1>
-      <p class="lede">A new analysis warns the deal could divert tens of billions from patient care. Find your MP in seconds and send them a letter — via WriteToThem or your own email — in a couple of minutes.</p>
+      <p class="lede">A new analysis warns the deal could divert tens of billions from patient care. Find your MP in seconds and send them a letter — straight from your own email — in a couple of minutes.</p>
     </div>
   </header>
 
@@ -282,7 +282,7 @@
       <hr style="border:none;border-top:1px solid var(--line);margin:22px 0;" />
 
       <p class="step-label"><span class="step-num">3</span> Your details</p>
-      <p class="hint">MPs only act for their own constituents, so include your name and address. These are inserted into the letter on this page — you send it yourself, via WriteToThem or your own email.</p>
+      <p class="hint">MPs only act for their own constituents, so include your name and address. We add these to the letter here — you won't be asked for them again — and you send it yourself from your own email.</p>
       <div class="grid2">
         <div class="field">
           <label for="name">Full name</label>
@@ -309,15 +309,15 @@
       <textarea id="letter" spellcheck="true"></textarea>
 
       <div class="btn-row" style="margin-top:18px;">
-        <button type="button" class="btn big" id="wtt-primary">📮 Copy letter &amp; send via WriteToThem</button>
+        <a class="btn big" id="send-btn" href="#" role="button">✉️ Email your MP</a>
       </div>
       <div class="btn-row" style="margin-top:10px;">
-        <a class="btn secondary hidden" id="send-btn" href="#" role="button">✉️ Or email your MP directly</a>
-        <button type="button" class="btn secondary" id="copy-btn">Copy letter only</button>
+        <button type="button" class="btn secondary" id="copy-btn">Copy letter</button>
+        <a class="btn secondary hidden" id="wtt-btn" target="_blank" rel="noopener" href="https://www.writetothem.com/">Send via WriteToThem</a>
       </div>
 
       <p class="note" id="send-note">
-        <strong>WriteToThem</strong> (by mySociety) reliably delivers to any MP. Pressing the button copies your letter and opens WriteToThem in a new tab — enter your postcode, then <strong>paste your letter</strong> into the message box. WriteToThem asks you to write in your own words, so feel free to tweak it there before sending.
+        Pressing <strong>Email your MP</strong> opens a ready-to-send message in your own email app — already addressed to your MP with the letter filled in. Read it over and hit send yourself, so it comes genuinely from you.
       </p>
 
       <details class="facts">
@@ -325,7 +325,7 @@
         <ul>
           <li>The letter cites a recently published study estimating the deal's cost at over <strong>£44.7&nbsp;billion</strong>, projecting around <strong>229,000 excess deaths by 2036</strong> from reduced NHS spending (rising to ~291,000 if adult social care effects are included).</li>
           <li>These are the campaigner-supplied figures reproduced in the template. Please check the underlying source and satisfy yourself of the claims before sending — and feel free to edit or soften any figure you are not comfortable asserting.</li>
-          <li>MP contact details come from the official <a href="https://members-api.parliament.uk/" target="_blank" rel="noopener">UK Parliament Members API</a>. If an email address isn't published there, use the WriteToThem button, which reliably delivers to any MP.</li>
+          <li>MP contact details come from the official <a href="https://members-api.parliament.uk/" target="_blank" rel="noopener">UK Parliament Members API</a>. For the rare MP with no published email, a <a href="https://www.writetothem.com/" target="_blank" rel="noopener">WriteToThem</a> fallback appears instead.</li>
         </ul>
       </details>
     </section>
@@ -510,42 +510,29 @@
       var subject = "Constituent concern: NHS funding impact of the UK–US pharmaceutical trade deal";
       var body = $("letter").value;
       var sendBtn = $("send-btn");
+      var wttBtn = $("wtt-btn");
       var note = $("send-note");
+      if (!mp) return;
 
-      // Direct email is the optional secondary path — only when Parliament
-      // publishes an address for this MP.
-      if (mp && mp.email) {
+      if (mp.email) {
+        // Primary path: a fully pre-filled email straight to the MP. No second
+        // site, no re-entering details.
         sendBtn.href = "mailto:" + encodeURIComponent(mp.email) +
           "?subject=" + encodeURIComponent(subject) +
           "&body=" + encodeURIComponent(body);
-        sendBtn.textContent = "✉️ Or email " + mp.name + " directly";
+        sendBtn.textContent = "✉️ Email " + mp.name;
         sendBtn.classList.remove("hidden");
+        wttBtn.classList.add("hidden");
+        note.innerHTML = "Pressing <strong>Email " + escapeHTML(mp.name) +
+          "</strong> opens a ready-to-send message to <strong>" + escapeHTML(mp.email) +
+          "</strong> in your own email app, with the letter filled in. Read it over and hit send yourself.";
       } else {
+        // Fallback only when Parliament publishes no email for this MP.
         sendBtn.classList.add("hidden");
-      }
-
-      if (mp) {
-        var extra = mp.email
-          ? " Prefer email? Use the direct-email button below — it opens a pre-filled message to <strong>" +
-            escapeHTML(mp.email) + "</strong> in your own mail app."
-          : "";
-        note.innerHTML = "<strong>WriteToThem</strong> (by mySociety) reliably delivers to " +
-          escapeHTML(mp.name) + ". Pressing the button copies your letter and opens WriteToThem in a new tab — " +
-          "enter your postcode, then <strong>paste your letter</strong> into the message box and send." + extra;
-      }
-    }
-
-    function sendViaWriteToThem() {
-      var text = $("letter").value;
-      var open = function () { window.open(writeToThemURL(), "_blank", "noopener"); };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function () {
-          toast("Letter copied — paste it into WriteToThem");
-          open();
-        }, function () { fallbackCopy(text, function () { toast("Letter selected — press Ctrl/Cmd+C, then paste"); }); open(); });
-      } else {
-        fallbackCopy(text, function () {});
-        open();
+        wttBtn.href = writeToThemURL();
+        wttBtn.classList.remove("hidden");
+        note.innerHTML = "Parliament doesn't publish an email address for " + escapeHTML(mp.name) +
+          ". Use <strong>Copy letter</strong>, then <strong>Send via WriteToThem</strong> — it delivers to any MP; paste your letter into its message box.";
       }
     }
 
@@ -618,8 +605,6 @@
       updateSendTargets();
       toast("Letter reset to the template");
     });
-
-    $("wtt-primary").addEventListener("click", sendViaWriteToThem);
 
     $("copy-btn").addEventListener("click", function () {
       var text = $("letter").value;
