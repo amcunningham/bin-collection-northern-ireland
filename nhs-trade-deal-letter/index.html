@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Write to your MP: NHS &amp; the UK–US pharmaceutical trade deal</title>
+  <meta name="description" content="Find your MP and send them a letter about the NHS funding impact of the UK–US pharmaceutical trade deal." />
+  <style>
+    :root {
+      --ink: #14181f;
+      --muted: #5a6473;
+      --line: #e2e6ec;
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --brand: #005eb8;      /* NHS blue */
+      --brand-dark: #003d78;
+      --accent: #0b7285;
+      --danger: #b42318;
+      --ok: #157347;
+      --radius: 14px;
+      --shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 24px rgba(16,24,40,.06);
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    a { color: var(--brand); }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
+
+    header.hero {
+      background: linear-gradient(160deg, var(--brand) 0%, var(--brand-dark) 100%);
+      color: #fff;
+      padding: 44px 0 40px;
+    }
+    header.hero .wrap { padding-bottom: 0; }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: .85;
+      margin: 0 0 10px;
+    }
+    header.hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(26px, 5vw, 38px);
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -.01em;
+    }
+    header.hero p.lede {
+      margin: 0;
+      font-size: clamp(16px, 2.4vw, 18px);
+      max-width: 60ch;
+      opacity: .95;
+    }
+
+    main { margin-top: -22px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      margin: 0 0 20px;
+    }
+    .step-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin: 0 0 14px;
+    }
+    .step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #fff;
+      display: inline-grid;
+      place-items: center;
+      font-size: 12px;
+    }
+    h2 { font-size: 20px; margin: 0 0 6px; }
+    .hint { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+
+    label { display: block; font-weight: 600; font-size: 14px; margin: 0 0 6px; }
+    input[type=text], input[type=email], textarea {
+      width: 100%;
+      font: inherit;
+      color: var(--ink);
+      padding: 11px 13px;
+      border: 1px solid #cdd4de;
+      border-radius: 10px;
+      background: #fff;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(0,94,184,.15);
+    }
+    .field { margin: 0 0 14px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      padding: 12px 20px;
+      border-radius: 10px;
+      background: var(--brand);
+      color: #fff;
+      transition: background .15s, transform .02s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:hover { background: var(--brand-dark); }
+    .btn:active { transform: translateY(1px); }
+    .btn[disabled] { opacity: .5; cursor: not-allowed; }
+    .btn.secondary {
+      background: #fff;
+      color: var(--brand);
+      border: 1px solid #cdd4de;
+    }
+    .btn.secondary:hover { background: #f0f5fb; }
+    .btn.big { font-size: 17px; padding: 15px 26px; width: 100%; justify-content: center; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    .lookup-row { display: flex; gap: 10px; align-items: flex-end; }
+    .lookup-row .field { flex: 1; margin: 0; }
+    @media (max-width: 440px) {
+      .lookup-row { flex-direction: column; align-items: stretch; }
+      .lookup-row .btn { width: 100%; justify-content: center; }
+    }
+
+    .status { font-size: 14px; margin: 12px 0 0; min-height: 1.2em; }
+    .status.err { color: var(--danger); font-weight: 600; }
+    .status.busy { color: var(--muted); }
+
+    .mp-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f7fbff;
+    }
+    .mp-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #dfe7f1;
+      flex: none;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,.12);
+    }
+    .mp-meta { flex: 1; min-width: 0; }
+    .mp-name { font-weight: 800; font-size: 18px; }
+    .mp-sub { color: var(--muted); font-size: 14px; }
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: #eef3f9;
+      color: var(--brand-dark);
+      margin-top: 4px;
+    }
+
+    textarea { min-height: 360px; resize: vertical; line-height: 1.5; font-size: 14px; }
+    .letter-tools { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0 0 8px; flex-wrap: wrap; }
+
+    .hidden { display: none !important; }
+    .note {
+      font-size: 13px;
+      color: var(--muted);
+      background: #fbfcfe;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--brand);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 14px 0 0;
+    }
+    .callout {
+      background: #fff8ec;
+      border: 1px solid #f3e2bf;
+      border-left: 3px solid #cf9b2c;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 14px;
+      margin: 0 0 16px;
+    }
+    details.facts { margin-top: 10px; }
+    details.facts summary { cursor: pointer; font-weight: 600; color: var(--brand); }
+    details.facts ul { margin: 10px 0 0; padding-left: 20px; }
+    details.facts li { margin-bottom: 6px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 24px 20px 40px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    footer a { color: var(--muted); }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: #fff;
+      padding: 11px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s, transform .2s;
+      z-index: 50;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .visually-hidden {
+      position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Protect the NHS</p>
+      <h1>Ask your MP to scrutinise the UK–US pharmaceutical trade deal</h1>
+      <p class="lede">A new analysis warns the deal could divert tens of billions from patient care. Find your MP in seconds and send them a letter — from your own email account — in a couple of minutes.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- STEP 1: find MP -->
+    <section class="card" id="step-find">
+      <p class="step-label"><span class="step-num">1</span> Find your MP</p>
+      <h2>Enter your postcode</h2>
+      <p class="hint">We use it to identify your constituency and your current Member of Parliament. Your postcode is only sent to the free public lookup services (postcodes.io and the UK Parliament API) — nothing is stored.</p>
+      <form id="lookup-form" class="lookup-row" autocomplete="on">
+        <div class="field">
+          <label for="postcode">Postcode</label>
+          <input type="text" id="postcode" name="postcode" placeholder="e.g. SW1A 1AA" autocomplete="postal-code" inputmode="text" spellcheck="false" required />
+        </div>
+        <button class="btn" type="submit" id="find-btn">Find my MP</button>
+      </form>
+      <p class="status" id="find-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- STEP 2: MP result + your details + letter -->
+    <section class="card hidden" id="step-compose">
+      <p class="step-label"><span class="step-num">2</span> Your MP</p>
+      <div class="mp-card" id="mp-card">
+        <img class="mp-avatar" id="mp-avatar" alt="" />
+        <div class="mp-meta">
+          <div class="mp-name" id="mp-name">—</div>
+          <div class="mp-sub" id="mp-constituency">—</div>
+          <span class="badge" id="mp-party"></span>
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--line);margin:22px 0;" />
+
+      <p class="step-label"><span class="step-num">3</span> Your details</p>
+      <p class="hint">MPs only act for their own constituents, so include your name and address. These are inserted into the letter on this page and sent only when <em>you</em> press send in your email app.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="name">Full name</label>
+          <input type="text" id="name" name="name" autocomplete="name" placeholder="Jane Smith" />
+        </div>
+        <div class="field">
+          <label for="email">Your email</label>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="jane@example.com" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="address">Address (street &amp; town)</label>
+        <input type="text" id="address" name="address" autocomplete="address-line1" placeholder="12 High Street, Anytown" />
+      </div>
+
+      <p class="step-label" style="margin-top:6px;"><span class="step-num">4</span> Your letter</p>
+      <div class="callout">
+        <strong>Make it your own.</strong> Identical form letters carry less weight than personal ones. Add a sentence in your own words about why the NHS matters to you — it makes a real difference.
+      </div>
+      <div class="letter-tools">
+        <label for="letter" style="margin:0;">Editable letter</label>
+        <button type="button" class="btn secondary" id="reset-letter" style="padding:6px 12px;font-size:13px;">Reset to template</button>
+      </div>
+      <textarea id="letter" spellcheck="true"></textarea>
+
+      <div class="btn-row" style="margin-top:18px;">
+        <a class="btn big" id="send-btn" href="#" role="button">✉️ Open email to your MP</a>
+      </div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button type="button" class="btn secondary" id="copy-btn">Copy letter</button>
+        <a class="btn secondary" id="wtt-btn" target="_blank" rel="noopener" href="https://www.writetothem.com/">Use WriteToThem instead</a>
+      </div>
+
+      <p class="note" id="send-note">
+        Pressing <strong>Open email to your MP</strong> opens a new message in your own email app, pre-addressed and pre-filled. Read it over, then hit send yourself — so it comes genuinely from you as a constituent.
+      </p>
+
+      <details class="facts">
+        <summary>Where do the figures in this letter come from?</summary>
+        <ul>
+          <li>The letter cites a recently published study estimating the deal's cost at over <strong>£44.7&nbsp;billion</strong>, projecting around <strong>229,000 excess deaths by 2036</strong> from reduced NHS spending (rising to ~291,000 if adult social care effects are included).</li>
+          <li>These are the campaigner-supplied figures reproduced in the template. Please check the underlying source and satisfy yourself of the claims before sending — and feel free to edit or soften any figure you are not comfortable asserting.</li>
+          <li>MP contact details come from the official <a href="https://members-api.parliament.uk/" target="_blank" rel="noopener">UK Parliament Members API</a>. If an email address isn't published there, use the WriteToThem button, which reliably delivers to any MP.</li>
+        </ul>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    <p>This is an independent tool to help constituents contact their elected representatives. It is not affiliated with the NHS, Parliament, or any political party. No data is collected or stored — everything happens in your browser.</p>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var $ = function (id) { return document.getElementById(id); };
+
+    var state = {
+      mp: null,            // { name, greeting, fullTitle, party, constituency, email, thumbnail, id }
+      letterEdited: false  // true once the user manually edits the textarea
+    };
+
+    // ---------- Letter template ----------
+    function todayLong() {
+      try {
+        return new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+      } catch (e) {
+        return new Date().toDateString();
+      }
+    }
+
+    function buildLetter() {
+      var name = ($("name").value || "[Your name]").trim();
+      var address = ($("address").value || "[Your address]").trim();
+      var postcode = ($("postcode").value || "[Your postcode]").trim().toUpperCase();
+      var email = ($("email").value || "[Your email]").trim();
+      var mpName = state.mp ? state.mp.fullTitle : "[MP's name] MP";
+      var greeting = state.mp ? state.mp.greeting : "[MP's name]";
+
+      return (
+        name + "\n" +
+        address + "\n" +
+        postcode + "\n" +
+        email + "\n\n" +
+        todayLong() + "\n\n" +
+        mpName + "\n" +
+        "House of Commons\n" +
+        "London\n" +
+        "SW1A 0AA\n\n" +
+        "Dear " + greeting + ",\n\n" +
+        "Re: NHS funding impact of the UK–US pharmaceutical trade deal\n\n" +
+        "I am writing as your constituent to highlight my concerns about the expected impact of the UK–US pharmaceutical trade deal on the health of citizens of the United Kingdom. Under the agreement, the UK committed to paying 25% more for new medicines, and NHS spending on innovative therapies is set to rise from 0.3% to 0.6% of GDP over the next decade.\n\n" +
+        "A recently published study estimates that the cost of the deal will exceed £44.7 billion, and that this will come at the cost of other health care provided by the NHS. The analysis projects that the resulting reduced spending on NHS services will cause around 229,000 excess deaths by 2036. This is greater than the 137,000 excess deaths attributed to the Covid-19 pandemic in the United Kingdom. The study authors observe that if the knock-on effects on adult social care are included, the excess deaths resulting from this trade deal could reach 291,000.\n\n" +
+        "I would be grateful if you could raise the following questions with the Secretary of State for Health and Social Care, and the Chancellor of the Exchequer:\n\n" +
+        "1. When will the Government release its assessment of the health and mortality impact of this trade deal?\n" +
+        "2. When will the Government release its assessment of the increase in Gross Domestic Product that will result from this trade deal?\n" +
+        "3. What mechanisms will the Government put in place to monitor the impact of the trade agreement on our health and wealth?\n" +
+        "4. Will the Government commit to withdrawing from, or renegotiating, this deal to protect the health of UK citizens and the NHS?\n\n" +
+        "The NHS is a vital public service that creates, promotes and protects health with remarkable efficiency. Any agreement to divert billions of pounds away from patient care should be subject to detailed parliamentary scrutiny.\n\n" +
+        "I look forward to your response.\n\n" +
+        "Yours sincerely,\n" +
+        name
+      );
+    }
+
+    function refreshLetter(force) {
+      if (state.letterEdited && !force) return;
+      $("letter").value = buildLetter();
+      if (force) state.letterEdited = false;
+    }
+
+    // ---------- MP lookup ----------
+    function setStatus(msg, kind) {
+      var el = $("find-status");
+      el.textContent = msg || "";
+      el.className = "status" + (kind ? " " + kind : "");
+    }
+
+    function normalisePostcode(pc) {
+      return (pc || "").replace(/\s+/g, "").toUpperCase();
+    }
+
+    function fetchJSON(url) {
+      return fetch(url, { headers: { "Accept": "application/json" } }).then(function (r) {
+        if (!r.ok) { throw new Error("HTTP " + r.status); }
+        return r.json();
+      });
+    }
+
+    function lookupConstituency(postcode) {
+      var url = "https://api.postcodes.io/postcodes/" + encodeURIComponent(postcode);
+      return fetchJSON(url).then(function (data) {
+        if (!data || !data.result) throw new Error("no-postcode");
+        var r = data.result;
+        return r.parliamentary_constituency_2024 || r.parliamentary_constituency || null;
+      });
+    }
+
+    function lookupMP(constituency) {
+      var url = "https://members-api.parliament.uk/api/Location/Constituency/Search?searchText=" +
+                encodeURIComponent(constituency) + "&take=20";
+      return fetchJSON(url).then(function (data) {
+        var items = (data && data.items) || [];
+        if (!items.length) throw new Error("no-constituency");
+
+        // Prefer an exact (case-insensitive) name match; else the first with a sitting member.
+        var target = constituency.toLowerCase();
+        var chosen = null;
+        for (var i = 0; i < items.length; i++) {
+          var v = items[i].value || {};
+          if (v.name && v.name.toLowerCase() === target &&
+              v.currentRepresentation && v.currentRepresentation.member) {
+            chosen = v; break;
+          }
+        }
+        if (!chosen) {
+          for (var j = 0; j < items.length; j++) {
+            var w = items[j].value || {};
+            if (w.currentRepresentation && w.currentRepresentation.member) { chosen = w; break; }
+          }
+        }
+        if (!chosen || !chosen.currentRepresentation || !chosen.currentRepresentation.member) {
+          throw new Error("no-member");
+        }
+
+        var m = chosen.currentRepresentation.member.value || {};
+        var party = (m.latestParty && m.latestParty.name) || "";
+        var thumb = m.thumbnailUrl || "";
+        var displayName = m.nameDisplayAs || m.nameListAs || "your MP";
+        return {
+          id: m.id,
+          name: displayName,
+          fullTitle: m.nameFullTitle || (displayName + " MP"),
+          greeting: displayName,
+          party: party,
+          constituency: chosen.name || constituency,
+          thumbnail: thumb,
+          email: null
+        };
+      });
+    }
+
+    function lookupEmail(memberId) {
+      if (!memberId && memberId !== 0) return Promise.resolve(null);
+      var url = "https://members-api.parliament.uk/api/Members/" + memberId + "/Contact";
+      return fetchJSON(url).then(function (data) {
+        var list = (data && data.value) || [];
+        for (var i = 0; i < list.length; i++) {
+          var e = list[i] && list[i].email;
+          if (e && /@/.test(e)) return e.trim();
+        }
+        return null;
+      }).catch(function () { return null; });
+    }
+
+    function renderMP(mp) {
+      $("mp-name").textContent = mp.fullTitle || mp.name;
+      $("mp-constituency").textContent = "MP for " + mp.constituency;
+      var party = $("mp-party");
+      if (mp.party) { party.textContent = mp.party; party.classList.remove("hidden"); }
+      else { party.classList.add("hidden"); }
+
+      var avatar = $("mp-avatar");
+      if (mp.thumbnail) {
+        avatar.src = mp.thumbnail;
+        avatar.alt = "Photo of " + mp.name;
+        avatar.style.display = "";
+      } else {
+        avatar.style.display = "none";
+      }
+    }
+
+    function updateSendTargets() {
+      var mp = state.mp;
+      var subject = "Constituent concern: NHS funding impact of the UK–US pharmaceutical trade deal";
+      var body = $("letter").value;
+      var sendBtn = $("send-btn");
+      var note = $("send-note");
+      var wtt = $("wtt-btn");
+
+      // WriteToThem search by postcode is the universal fallback.
+      var pc = normalisePostcode($("postcode").value);
+      wtt.href = "https://www.writetothem.com/" + (pc ? "?a=westminster&pc=" + encodeURIComponent(pc) : "");
+
+      if (mp && mp.email) {
+        sendBtn.href = "mailto:" + encodeURIComponent(mp.email) +
+          "?subject=" + encodeURIComponent(subject) +
+          "&body=" + encodeURIComponent(body);
+        sendBtn.textContent = "✉️ Email " + mp.name;
+        sendBtn.classList.remove("hidden");
+        note.innerHTML = "Pressing <strong>Email " + escapeHTML(mp.name) +
+          "</strong> opens a new message to <strong>" + escapeHTML(mp.email) +
+          "</strong> in your own email app, pre-filled. Read it over, then hit send yourself.";
+      } else if (mp) {
+        // No published email — steer to WriteToThem, keep letter copyable.
+        sendBtn.classList.add("hidden");
+        note.innerHTML = "We couldn't find a published email address for " + escapeHTML(mp.name) +
+          " in the Parliament API. Use <strong>Use WriteToThem instead</strong> below (it delivers to any MP by postcode), " +
+          "or <strong>Copy letter</strong> and paste it in. Your letter is ready above.";
+      }
+    }
+
+    function escapeHTML(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+      });
+    }
+
+    // ---------- Events ----------
+    $("lookup-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var raw = $("postcode").value;
+      var pc = normalisePostcode(raw);
+      if (pc.length < 5) { setStatus("Please enter a full UK postcode.", "err"); return; }
+
+      var btn = $("find-btn");
+      btn.disabled = true;
+      setStatus("Looking up your constituency…", "busy");
+
+      lookupConstituency(pc)
+        .then(function (constituency) {
+          if (!constituency) throw new Error("no-constituency");
+          setStatus("Found " + constituency + " — finding your MP…", "busy");
+          return lookupMP(constituency);
+        })
+        .then(function (mp) {
+          state.mp = mp;
+          renderMP(mp);
+          $("step-compose").classList.remove("hidden");
+          setStatus("", "");
+          refreshLetter(true);
+          // Fetch email in the background; update send targets when it resolves.
+          updateSendTargets();
+          $("step-compose").scrollIntoView({ behavior: "smooth", block: "start" });
+          return lookupEmail(mp.id).then(function (email) {
+            state.mp.email = email;
+            updateSendTargets();
+          });
+        })
+        .catch(function (err) {
+          var msg;
+          if (String(err.message) === "no-postcode") {
+            msg = "We couldn't find that postcode. Please check it and try again.";
+          } else if (String(err.message).indexOf("no-") === 0) {
+            msg = "We found your area but couldn't identify a sitting MP automatically. Try WriteToThem: writetothem.com";
+          } else {
+            msg = "Sorry, the lookup failed (network or service issue). Please try again in a moment.";
+          }
+          setStatus(msg, "err");
+        })
+        .then(function () { btn.disabled = false; });
+    });
+
+    // Keep letter in sync with the detail fields (until the user hand-edits it)
+    ["name", "address", "postcode", "email"].forEach(function (id) {
+      $(id).addEventListener("input", function () {
+        refreshLetter(false);
+        updateSendTargets();
+      });
+    });
+
+    $("letter").addEventListener("input", function () {
+      state.letterEdited = true;
+      updateSendTargets();
+    });
+
+    $("reset-letter").addEventListener("click", function () {
+      refreshLetter(true);
+      updateSendTargets();
+      toast("Letter reset to the template");
+    });
+
+    $("copy-btn").addEventListener("click", function () {
+      var text = $("letter").value;
+      var done = function () { toast("Letter copied to clipboard"); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+      } else {
+        fallbackCopy(text, done);
+      }
+    });
+
+    function fallbackCopy(text, done) {
+      var ta = $("letter");
+      ta.focus(); ta.select();
+      try { document.execCommand("copy"); done(); }
+      catch (e) { toast("Press Ctrl/Cmd+C to copy"); }
+    }
+
+    var toastTimer = null;
+    function toast(msg) {
+      var t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2200);
+    }
+
+    // Seed the textarea so it's never empty if someone scrolls down first.
+    refreshLetter(true);
+  })();
+  </script>
+</body>
+</html>
